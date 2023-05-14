@@ -15,5 +15,5 @@
    limitations under the License.
 -->
 <resources>
-  <string translatable="false" name="GoogleCloudApiKey">REPLACE_WITH_REAL_KEY</string>
+  <string translatable="false" name="GoogleCloudApiKey">AIzaSyAqW3Daqj4uCMIYnt820kT2ebm100jpu_E</string>
 </resources>
