@@ -43,7 +43,7 @@ class HelloGeoView(val activity: HelloGeoActivity) : DefaultLifecycleObserver {
     setup { screenLocation ->
       val latLng: LatLng =
         mapView?.googleMap?.projection?.fromScreenLocation(screenLocation) ?: return@setup
-      activity.renderer.onMapClick(latLng)
+      //activity.renderer.onMapClick(latLng)
     }
   }
   val mapFragment =

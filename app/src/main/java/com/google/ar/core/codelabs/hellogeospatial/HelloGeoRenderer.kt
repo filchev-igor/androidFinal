@@ -186,6 +186,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
       )
     }
 
+    earth?.let { activity.view.updateStatusText(it, earth.cameraGeospatialPose) }
+
     // Draw the placed anchor, if it exists.
     earthAnchor?.let {
       render.renderCompassAtAnchor(it)

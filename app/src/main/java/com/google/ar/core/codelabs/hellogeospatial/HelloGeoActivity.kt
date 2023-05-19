@@ -17,8 +17,10 @@ package com.google.ar.core.codelabs.hellogeospatial
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.codelabs.hellogeospatial.helpers.ARCoreSessionLifecycleHelper
@@ -79,6 +81,21 @@ class HelloGeoActivity : AppCompatActivity() {
 
     // Sets up an example renderer using our HelloGeoRenderer.
     SampleRender(view.surfaceView, renderer, assets)
+
+    val addressButton1 = findViewById<Button>(R.id.button5)
+    val addressButton2 = findViewById<Button>(R.id.button6)
+
+    addressButton1.setOnClickListener {
+      val latLng = LatLng(54.721838, 25.343869)
+
+      //this.renderer.onMapClick(latLng)
+    }
+
+    addressButton2.setOnClickListener {
+      val latLng = LatLng(54.721474, 25.343496)
+
+      this.renderer.onMapClick(latLng)
+    }
   }
 
   // Configure the session, setting the desired options according to your use case.
