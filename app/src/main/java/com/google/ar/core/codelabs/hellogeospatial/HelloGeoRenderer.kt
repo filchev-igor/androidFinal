@@ -199,13 +199,16 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
   var earthAnchor: Anchor? = null
 
-  fun onMapClick(latLng: LatLng) {
+  fun onMapClick(finalLatLng: LatLng) {
     // TODO: place an anchor at the given position.
     val earth = session?.earth ?: return
 
     if (earth.trackingState != TrackingState.TRACKING) {
       return
     }
+
+    val cameraGeospatialPose = earth.cameraGeospatialPose
+    val currentLatLng = LatLng(cameraGeospatialPose.latitude, cameraGeospatialPose.longitude)
 
     earthAnchor?.detach()
 
@@ -217,10 +220,10 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     val qz = 0f
     val qw = 1f
     earthAnchor =
-      earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw)
+      earth.createAnchor(currentLatLng.latitude, currentLatLng.longitude, altitude, qx, qy, qz, qw)
 
     activity.view.mapView?.earthMarker?.apply {
-      position = latLng
+      position = currentLatLng
       isVisible = true
     }
   }

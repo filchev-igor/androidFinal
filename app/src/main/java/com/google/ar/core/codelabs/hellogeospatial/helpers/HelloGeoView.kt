@@ -46,6 +46,7 @@ class HelloGeoView(val activity: HelloGeoActivity) : DefaultLifecycleObserver {
       //activity.renderer.onMapClick(latLng)
     }
   }
+
   val mapFragment =
     (activity.supportFragmentManager.findFragmentById(R.id.map)!! as SupportMapFragment).also {
       it.getMapAsync { googleMap -> mapView = MapView(activity, googleMap) }
