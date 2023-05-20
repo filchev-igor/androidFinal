@@ -84,21 +84,18 @@ class HelloGeoActivity : AppCompatActivity() {
 
     val addressButton1 = findViewById<Button>(R.id.button5)
     val addressButton2 = findViewById<Button>(R.id.button6)
-    val activity = this
 
 
     addressButton1.setOnClickListener {
       var mapView: MapView? = null
-      val finalLatLng = LatLng(54.722072, 25.344115)
+      val finalLatLng = LatLng(54.722339, 25.343416)
 
       this.renderer.onMapClick(finalLatLng)
     }
 
     addressButton2.setOnClickListener {
       var mapView: MapView? = null
-      val finalLatLng = LatLng(54.732073, 25.344115)
-      var currentLatLng : LatLng
-
+      val finalLatLng = LatLng(54.722084, 25.344023)
 
       this.renderer.onMapClick(finalLatLng)
     }

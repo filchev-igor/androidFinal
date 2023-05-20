@@ -21,14 +21,13 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
+import com.google.ar.core.Config
+import com.google.ar.core.InstantPlacementPoint
 import com.google.ar.core.TrackingState
 import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper
+import com.google.ar.core.examples.java.common.helpers.SnackbarHelper
 import com.google.ar.core.examples.java.common.helpers.TrackingStateHelper
-import com.google.ar.core.examples.java.common.samplerender.Framebuffer
-import com.google.ar.core.examples.java.common.samplerender.Mesh
-import com.google.ar.core.examples.java.common.samplerender.SampleRender
-import com.google.ar.core.examples.java.common.samplerender.Shader
-import com.google.ar.core.examples.java.common.samplerender.Texture
+import com.google.ar.core.examples.java.common.samplerender.*
 import com.google.ar.core.examples.java.common.samplerender.arcore.BackgroundRenderer
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import java.io.IOException
@@ -42,6 +41,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
     private val Z_NEAR = 0.1f
     private val Z_FAR = 1000f
+
+    private var finalAnchorLatLng = LatLng(40.00, 40.00)
   }
 
   lateinit var backgroundRenderer: BackgroundRenderer
@@ -114,6 +115,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     virtualSceneFramebuffer.resize(width, height)
   }
   //</editor-fold>
+
+  var placementIsDone = false;
 
   override fun onDrawFrame(render: SampleRender) {
     val session = session ?: return
@@ -190,6 +193,39 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
     // Draw the placed anchor, if it exists.
     earthAnchor?.let {
+      //render.renderCompassAtAnchor(it)
+
+      val cameraGeospatialPose = earth!!.cameraGeospatialPose
+      val currentLatLng = LatLng(cameraGeospatialPose.latitude, cameraGeospatialPose.longitude)
+      val altitude = earth.cameraGeospatialPose.altitude - 1
+      // The rotation quaternion of the anchor in the East-Up-South (EUS) coordinate system.
+      val qx = 0f
+      val qy = 0f
+      val qz = 0f
+      val qw = 1f
+
+      val latitudeDiff = finalAnchorLatLng.latitude - currentLatLng.latitude
+      val longitudeDiff = finalAnchorLatLng.longitude - currentLatLng.longitude
+
+      if (latitudeDiff > 0.2 && longitudeDiff > 0.4) {
+        val newLatitudeDiff = if (latitudeDiff > 0) 0.2 else -0.2
+        val newLongitudeDiff = if (longitudeDiff > 0) 0.2 else -0.2
+
+        val newLatitude = currentLatLng.latitude + newLatitudeDiff
+        val newLongitude = currentLatLng.longitude + newLongitudeDiff
+
+        earthAnchor =
+          earth.createAnchor(newLatitude, newLongitude, altitude, qx, qy, qz, qw)
+
+        val snackbarHelper = SnackbarHelper()
+
+        snackbarHelper.showMessageWithDismiss(activity, "$newLatitude $newLongitude")
+
+        render.renderCompassAtAnchor(earthAnchor!!)
+
+        return
+      }
+
       render.renderCompassAtAnchor(it)
     }
 
@@ -198,6 +234,10 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
   }
 
   var earthAnchor: Anchor? = null
+
+  fun setFinalAnchorLatLng(latitude: Double, longitude: Double) {
+    finalAnchorLatLng = LatLng(latitude, longitude)
+  }
 
   fun onMapClick(finalLatLng: LatLng) {
     // TODO: place an anchor at the given position.
@@ -222,8 +262,14 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     earthAnchor =
       earth.createAnchor(currentLatLng.latitude, currentLatLng.longitude, altitude, qx, qy, qz, qw)
 
+    //val snackbarHelper = SnackbarHelper()
+
+    setFinalAnchorLatLng(finalLatLng.latitude, finalLatLng.longitude)
+
+    //snackbarHelper.showMessageWithDismiss(activity,finalLatLng.latitude.toString() + ' ' + finalLatLng.longitude.toString())
+
     activity.view.mapView?.earthMarker?.apply {
-      position = currentLatLng
+      position = finalLatLng
       isVisible = true
     }
   }
