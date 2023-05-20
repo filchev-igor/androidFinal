@@ -207,9 +207,10 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
       val latitudeDiff = finalAnchorLatLng.latitude - currentLatLng.latitude
       val longitudeDiff = finalAnchorLatLng.longitude - currentLatLng.longitude
 
-      if (latitudeDiff > 0.2 && longitudeDiff > 0.4) {
-        val newLatitudeDiff = if (latitudeDiff > 0) 0.2 else -0.2
-        val newLongitudeDiff = if (longitudeDiff > 0) 0.2 else -0.2
+      if (latitudeDiff > 0.000000000004 && longitudeDiff > 0.000000000004) {
+
+        val newLatitudeDiff = if (latitudeDiff > 0.00000000004) 0.000000000002 else -0.000000000002
+        val newLongitudeDiff = if (longitudeDiff > 0.00000000004) 0.000000000002 else -0.000000000002
 
         val newLatitude = currentLatLng.latitude + newLatitudeDiff
         val newLongitude = currentLatLng.longitude + newLongitudeDiff
