@@ -21,16 +21,17 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
-import com.google.ar.core.Config
-import com.google.ar.core.InstantPlacementPoint
+import com.google.ar.core.Camera
+import com.google.ar.core.Pose
 import com.google.ar.core.TrackingState
 import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper
-import com.google.ar.core.examples.java.common.helpers.SnackbarHelper
 import com.google.ar.core.examples.java.common.helpers.TrackingStateHelper
 import com.google.ar.core.examples.java.common.samplerender.*
 import com.google.ar.core.examples.java.common.samplerender.arcore.BackgroundRenderer
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import java.io.IOException
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 class HelloGeoRenderer(val activity: HelloGeoActivity) :
@@ -193,6 +194,12 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
     // Draw the placed anchor, if it exists.
     earthAnchor?.let {
+      render.renderCompassAtAnchor(it, camera)
+    }
+
+    // Draw the placed anchor, if it exists.
+    /*
+    earthAnchor?.let {
       //render.renderCompassAtAnchor(it)
 
       val cameraGeospatialPose = earth!!.cameraGeospatialPose
@@ -229,6 +236,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
       render.renderCompassAtAnchor(it)
     }
+
+     */
 
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
@@ -275,15 +284,28 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     }
   }
 
-  private fun SampleRender.renderCompassAtAnchor(anchor: Anchor) {
-    // Get the current pose of the Anchor in world space. The Anchor pose is updated
+  private fun SampleRender.renderCompassAtAnchor(anchor: Anchor, camera: Camera) {
+        // Get the current pose of the Anchor in world space. The Anchor pose is updated
     // during calls to session.update() as ARCore refines its estimate of the world.
     anchor.pose.toMatrix(modelMatrix, 0)
 
     // Calculate model/view/projection matrices
-    Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0)
+    val scaleMatrix = FloatArray(16)
+    Matrix.setIdentityM(scaleMatrix, 0)
+    val scale: Float = getScale(earthAnchor!!.pose, camera.displayOrientedPose)
+    scaleMatrix[0] = scale
+    scaleMatrix[5] = scale
+    scaleMatrix[10] = scale
+    Matrix.multiplyMM(modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0)
+    // Rotate the virtual object 180 degrees around the Y axis to make the object face the GL
+    // camera -Z axis, since camera Z axis faces toward users.
+    val rotationMatrix = FloatArray(16)
+    Matrix.setRotateM(rotationMatrix, 0, 180f, 0.0f, 1.0f, 0.0f)
+    val rotationModelMatrix = FloatArray(16)
+    Matrix.multiplyMM(rotationModelMatrix, 0, modelMatrix, 0, rotationMatrix, 0)
+    // Calculate model/view/projection matrices
+    Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, rotationModelMatrix, 0)
     Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrix, 0)
-
     // Update shader properties and draw
     virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
@@ -291,4 +313,15 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
   private fun showError(errorMessage: String) =
     activity.view.snackbarHelper.showError(activity, errorMessage)
+
+  // Return the scale in range [1, 2] after mapping a distance between camera and anchor to [2, 20].
+  private fun getScale(anchorPose: Pose, cameraPose: Pose): Float {
+    val distance = sqrt(
+      (anchorPose.tx() - cameraPose.tx()).toDouble().pow(2.0)
+              + (anchorPose.ty() - cameraPose.ty()).toDouble().pow(2.0)
+              + (anchorPose.tz() - cameraPose.tz()).toDouble().pow(2.0)
+    )
+    val mapDistance = 2.0.coerceAtLeast(distance).coerceAtMost(20.0)
+    return (mapDistance - 2).toFloat() / (20 - 2) + 1
+  }
 }
